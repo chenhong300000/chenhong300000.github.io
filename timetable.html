@@ -183,11 +183,14 @@
             function highlightToday() {
                 const today = new Date().getDay();
                 if (today < 1 || today > 5) return;
-                const column = today;
-                if (ths[column]) ths[column].classList.add('active');
+                // 高亮表头
+                if (ths[today]) ths[today].classList.add('active');
+                // 高亮内容
                 tbody.querySelectorAll('tr').forEach(row => {
-                    const cell = row.querySelectorAll('td')[today - 1];
-                    if (cell) cell.classList.add('active');
+                    const tds = row.querySelectorAll('td');
+                    if (tds.length === 6 && tds[today]) {
+                        tds[today].classList.add('active');
+                    }
                 });
             }
 
