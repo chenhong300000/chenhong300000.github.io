@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>课表</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "思源黑体", "微软雅黑", sans-serif;
+    }
+    body {
+        padding: 30px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 2px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .banner {
+        display: block;
+        padding: 12px 18px;
+        margin-bottom: 18px;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #2d8cf0 0%, #5aa6ff 100%);
+        color: #fff;
+        text-align: center;
+        font-size: 0.95rem;
+        box-shadow: 0 1px 8px rgba(45, 140, 240, 0.18);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        user-select: text;
+        background: white;
+    }
+    th, td {
+        padding: 16px 20px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+    }
+    th {
+        background: #2d8cf0;
+        color: white;
+        font-weight: 500;
+        border-bottom: 3px solid #1b77d8;
+    }
+    tr {
+        transition: all 0.2s ease;
+    }
+    .active {
+        background: #e8f4ff !important;
+        font-weight: 600;
+        color: #2d8cf0;
+    }
+    thead th.active {
+        background: #1b77d8 !important;
+        color: white !important;
+    }
+    tr:hover:not(.active) {
+        background: #f9f9f9;
+    }
+    thead tr:hover {
+        background: #2d8cf0;
+    }
+    .btn-group {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    select {
+        padding: 8px 16px;
+        margin: 0 5px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    select:hover {
+        border-color: #2d8cf0;
+    }
+</style>
+<style>
+    @media (max-width: 768px) {
+        body {
+            padding: 15px;
+            overflow: visible;
+        }
+        .banner {
+            font-size: 0.9rem;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+        h1 {
+            font-size: 1.5rem;
+        }
+        .btn-group {
+            margin-bottom: 15px;
+        }
+        select {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+        .table-box {
+            overflow-x: auto;
+        }
+        table {
+            min-width: 600px;
+        }
+    }
+</style>
+</head>
+<body>
+    <div class="banner" id="banner"></div>
+    <h1 style="text-align: center;color: #2d8cf0;">初一三班课表</h1>
+    <div class="btn-group">
+        <select id="weekSelector">
+            <option value="single">单周</option>
+            <option value="double">双周</option>
+        </select>
+    </div>
+    <div class="table-box">
+        <table id="timetable">
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>周一</th>
+                    <th>周二</th>
+                    <th>周三</th>
+                    <th>周四</th>
+                    <th>周五</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const weekSelector = document.getElementById('weekSelector');
+            const tbody = document.querySelector('#timetable tbody');
+            const ths = document.querySelectorAll('#timetable thead th');
+
+            const timetableData = {
+                single: [
+                    ['8:00-8:40', '英', '英', '数', '英', '信'],
+                    ['8:50-9:30', '英', '历', '数', '语', '英'],
+                    ['10:00-10:40', '音', '美', '生', '数', '英'],
+                    ['10:50-11:30', '心', '语', '音', '数', '语'],
+                    ['11:40-12:20', '数', '地', '英', '体', '数'],
+                    ['14:20-15:00', '语', '数', '地', '劳', '历'],
+                    ['15:10-15:50', '政', '政', '语', '生', '体'],
+                    ['16:00-16:40', '班', '体', '语', '自', '选'],
+                    ['17:10-18:00', '语', '数', '英', '自', '英'],
+                    ['19:00-19:40', '英', '数', '语', '政', ''],
+                    ['19:50-20:30', '英', '数', '语', '语', '']
+                ],
+                double: [
+                    ['8:00-8:40', '英', '英', '数', '英', '信'],
+                    ['8:50-9:30', '英', '历', '数', '语', '英'],
+                    ['10:00-10:40', '音', '美', '生', '数', '英'],
+                    ['10:50-11:30', '心', '语', '音', '数', '语'],
+                    ['11:40-12:20', '数', '地', '英', '体', '数'],
+                    ['14:20-15:00', '语', '数', '地', '劳', '历'],
+                    ['15:10-15:50', '政', '政', '语', '生', '体'],
+                    ['16:00-16:40', '班', '体', '语', '自', '选'],
+                    ['17:10-18:00', '英', '数', '语', '自', '英'],
+                    ['19:00-19:40', '数', '英', '语', '历', ''],
+                    ['19:50-20:30', '数', '英', '语', '英', '']
+                ]
+            };
+
+            function clearActive() {
+                ths.forEach(th => th.classList.remove('active'));
+                tbody.querySelectorAll('td').forEach(td => td.classList.remove('active'));
+            }
+
+            function highlightToday() {
+                const today = new Date().getDay();
+                if (today < 1 || today > 5) return;
+                const colIndex = today;
+                const column = colIndex;
+                if (ths[column]) ths[column].classList.add('active');
+                tbody.querySelectorAll('tr').forEach(row => {
+                    const cell = row.querySelectorAll('td')[column - 1];
+                    if (cell) cell.classList.add('active');
+                });
+            }
+
+            function loadTimetable(weekType) {
+                const rows = timetableData[weekType] || [];
+                tbody.innerHTML = '';
+                rows.forEach(cells => {
+                    const tr = document.createElement('tr');
+                    cells.forEach(text => {
+                        const td = document.createElement('td');
+                        td.textContent = text;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                clearActive();
+                highlightToday();
+            }
+
+            function getCurrentWeekType() {
+                const startDate = new Date('2026-03-03');
+                const today = new Date();
+                const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+                const weekNumber = Math.floor(diffDays / 7) + 1;
+                return weekNumber % 2 === 1 ? 'single' : 'double';
+            }
+
+            weekSelector.value = getCurrentWeekType();
+            loadTimetable(weekSelector.value);
+            weekSelector.addEventListener('change', () => loadTimetable(weekSelector.value));
+
+            function isSameDay(targetDate, timezone = 'local') {
+                const now = new Date();
+                const target = new Date(targetDate);
+                if (timezone === 'utc') {
+                    return now.getUTCFullYear() === target.getUTCFullYear() &&
+                           now.getUTCMonth() === target.getUTCMonth() &&
+                           now.getUTCDate() === target.getUTCDate();
+                } else {
+                    return now.getFullYear() === target.getFullYear() &&
+                           now.getMonth() === target.getMonth() &&
+                           now.getDate() === target.getDate();
+                }
+            }
+
+            function isBetweenDates(startDate, endDate, options = {}) {
+                const { inclusiveStart = true, inclusiveEnd = true, timezone = 'local' } = options;
+                const now = new Date();
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (start > end) {
+                    [start, end] = [end, start];
+                }
+                let currentTime, startTime, endTime;
+                if (timezone === 'utc') {
+                    currentTime = now.getTime();
+                    startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+                    endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59, 999);
+                } else {
+                    currentTime = now.getTime();
+                    startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+                    endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999).getTime();
+                }
+                const afterStart = inclusiveStart ? currentTime >= startTime : currentTime > startTime;
+                const beforeEnd = inclusiveEnd ? currentTime <= endTime : currentTime < endTime;
+                return afterStart && beforeEnd;
+            }
+
+            const isInRange = isBetweenDates('2026-04-21', '2026-04-23');
+            const banner = document.getElementById('banner');
+            if (isInRange) {
+                banner.innerText = '🎉欢迎澳洲同学来校学习！中澳友谊万岁！';
+            } else {
+                banner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
